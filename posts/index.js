@@ -11,7 +11,7 @@ app.use(cors());
 const mongoose = require("mongoose");
 const PostModel = require("./database");
 
-mongoose.connect("mongodb://mongo-clusterip-svc:27017/blog-post", {
+mongoose.connect("mongodb://mongodb-clusterip-svc:27017/blog-post", {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });

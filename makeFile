@@ -1,0 +1,19 @@
+build_client_image: 
+	cd client && docker build -t proshanto3/client .
+
+build_comments_image: 
+	cd comments && docker build -t proshanto3/comments .
+
+build_event_bus_image: 
+	cd event-bus && docker build -t proshanto3/event-bus .
+
+build_moderation_image: 
+	cd moderation && docker build -t proshanto3/moderation .
+
+build_posts_image: 
+	cd posts && docker build -t proshanto3/posts .
+
+build_query_image: 
+	cd query && docker build -t proshanto3/query .
+
+.PHONY: build_client_image build_comments_image build_event_bus_image build_moderation_image build_posts_image build_query_image
