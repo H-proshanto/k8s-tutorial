@@ -10,4 +10,4 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   storageClassName: manual
   hostPath:
-    path: /Users/bs1155/Desktop/projects/personal/vol
+    path: /Users/bs1155/Desktop/projects/personal/vol/

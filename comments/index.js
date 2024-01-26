@@ -3,26 +3,40 @@ const bodyParser = require("body-parser");
 const { randomBytes } = require("crypto");
 const cors = require("cors");
 const axios = require("axios");
+const PostModel = require("./database");
+const mongoose = require("mongoose");
 
 const app = express();
 app.use(bodyParser.json());
 app.use(cors());
 
-const commentsByPostId = {};
+mongoose.connect("mongodb://mongodb-clusterip-svc:27017/blog-post", {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
 
-app.get("/posts/:id/comments", (req, res) => {
-  res.send(commentsByPostId[req.params.id] || []);
+const db = mongoose.connection;
+db.on("error", console.error.bind(console, "MongoDB connection error:"));
+db.once("open", () => {
+  console.log("Connected to MongoDB");
+});
+
+app.get("/posts/:id/comments", async (req, res) => {
+  const post = await PostModel.findOne({ id: req.params.id }).lean();
+
+  res.send(post?.comments || []);
 });
 
 app.post("/posts/:id/comments", async (req, res) => {
   const commentId = randomBytes(4).toString("hex");
   const { content } = req.body;
 
-  const comments = commentsByPostId[req.params.id] || [];
+  const post = await PostModel.findOne({ id: req.params.id }).lean();
+  const comments = post?.comments || [];
 
   comments.push({ id: commentId, content, status: "pending" });
 
-  commentsByPostId[req.params.id] = comments;
+  await PostModel.updateOne({ id: req.params.id }, { comments: comments });
 
   await axios.post("http://event-bus-svc:4005/events", {
     type: "CommentCreated",
@@ -44,12 +58,20 @@ app.post("/events", async (req, res) => {
 
   if (type === "CommentModerated") {
     const { postId, id, status, content } = data;
-    const comments = commentsByPostId[postId];
+    const post = await PostModel.findOne({ id: req.params.id }).lean();
+    const comments = post?.comments || [];
 
-    const comment = comments.find((comment) => {
-      return comment.id === id;
+    const updatedComments = comments.map((comment) => {
+      if (comment.id === id) {
+        comment.status = status;
+      }
+      return comment;
     });
-    comment.status = status;
+
+    await PostModel.updateOne(
+      { id: req.params.id },
+      { comments: updatedComments }
+    );
 
     await axios.post("http://event-bus-svc:4005/events", {
       type: "CommentUpdated",
