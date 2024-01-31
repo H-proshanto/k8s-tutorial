@@ -4,12 +4,12 @@ import CommentCreate from "./CommentCreate";
 import CommentList from "./CommentList";
 
 const PostList = ({ newAvailable, setNewAvailable }) => {
-  const [posts, setPosts] = useState({});
+  const [posts, setPosts] = useState([]);
 
   const fetchPosts = async () => {
     const res = await axios.get("http://posts.com/posts");
 
-    setPosts(res.data);
+    setPosts(res.data || []);
   };
 
   useEffect(() => {
@@ -23,7 +23,7 @@ const PostList = ({ newAvailable, setNewAvailable }) => {
     }
   }, [newAvailable, setNewAvailable]);
 
-  const renderedPosts = Object.values(posts).map((post) => {
+  const renderedPosts = posts.map((post) => {
     return (
       <div
         className="card"

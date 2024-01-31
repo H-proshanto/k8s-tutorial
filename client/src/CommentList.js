@@ -1,6 +1,9 @@
 import React from "react";
 
 const CommentList = ({ comments }) => {
+  if (!comments) {
+    return <></>;
+  }
   const renderedComments = comments.map((comment) => {
     let content;
 
