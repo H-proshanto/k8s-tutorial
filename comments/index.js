@@ -58,7 +58,7 @@ app.post("/events", async (req, res) => {
 
   if (type === "CommentModerated") {
     const { postId, id, status, content } = data;
-    const post = await PostModel.findOne({ id: req.params.id }).lean();
+    const post = await PostModel.findOne({ id: postId }).lean();
     const comments = post?.comments || [];
 
     const updatedComments = comments.map((comment) => {
@@ -69,8 +69,11 @@ app.post("/events", async (req, res) => {
     });
 
     await PostModel.updateOne(
-      { id: req.params.id },
-      { comments: updatedComments }
+      { id: postId },
+      { comments: updatedComments },
+      {
+        new: true,
+      }
     );
 
     await axios.post("http://event-bus-svc:4005/events", {
