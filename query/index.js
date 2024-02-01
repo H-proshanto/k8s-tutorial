@@ -7,43 +7,29 @@ const app = express();
 app.use(bodyParser.json());
 app.use(cors());
 
-const posts = {};
+const mongoose = require("mongoose");
+const PostModel = require("./database");
 
-const handleEvent = (type, data) => {
-  if (type === "PostCreated") {
-    const { id, title } = data;
+mongoose.connect("mongodb://mongodb-clusterip-svc:27017/blog-post", {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
 
-    posts[id] = { id, title, comments: [] };
-  }
+const db = mongoose.connection;
+db.on("error", console.error.bind(console, "MongoDB connection error:"));
+db.once("open", () => {
+  console.log("Connected to MongoDB");
+});
 
-  if (type === "CommentCreated") {
-    const { id, content, postId, status } = data;
-
-    const post = posts[postId];
-    post.comments.push({ id, content, status });
-  }
-
-  if (type === "CommentUpdated") {
-    const { id, content, postId, status } = data;
-
-    const post = posts[postId];
-    const comment = post.comments.find((comment) => {
-      return comment.id === id;
-    });
-
-    comment.status = status;
-    comment.content = content;
-  }
-};
-
-app.get("/posts", (req, res) => {
+app.get("/posts", async (req, res) => {
+  const posts = await PostModel.find().lean();
   res.send(posts);
 });
 
 app.post("/events", (req, res) => {
   const { type, data } = req.body;
 
-  handleEvent(type, data);
+  // handleEvent(type, data);
 
   res.send({});
 });
